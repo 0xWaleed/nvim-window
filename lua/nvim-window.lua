@@ -216,6 +216,18 @@ function M.hint(window)
   return hints[window]
 end
 
+local function get_tabpage_windows()
+  local windows = vim.tbl_filter(function(id)
+    return api.nvim_win_get_config(id).relative == ''
+  end, api.nvim_tabpage_list_wins(0))
+  return windows
+end
+
+local function get_windows()
+  local windows = get_tabpage_windows()
+  return window_keys(windows)
+end
+
 -- Configures the plugin by merging the given settings into the default ones.
 function M.setup(user_config)
   config = vim.tbl_extend('force', config, user_config)
@@ -229,6 +241,8 @@ function M.pick()
 
   local window_keys = window_keys(windows)
   local hints_state = show_hints(window_keys, true)
+  local window_keys = get_windows()
+  local floats = open_floats(window_keys)
   local key = get_char()
   local window = nil
 
@@ -269,5 +283,32 @@ function M.pick()
     api.nvim_set_current_win(window)
   end
 end
+
+function M.goto(key)
+  local wins = get_windows()
+
+  local win = wins[key]
+
+  if not win then
+    return
+  end
+
+  api.nvim_set_current_win(win)
+end
+
+function M.goto_by_number(index)
+  local key = config.chars[index]
+
+  local wins = get_windows()
+
+  local win = wins[key]
+
+  if not win then
+    return
+  end
+
+  api.nvim_set_current_win(win)
+end
+
 
 return M
